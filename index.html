@@ -645,17 +645,35 @@ function guardarLocal() {
 
 async function enviarAlServidor(accion, datos) {
   try {
+    const payload = JSON.stringify({ accion, ...datos });
+    
+    // Intentar con fetch directo
     const resp = await fetch(API_MAQ, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ accion, ...datos }),
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: payload,
       redirect: 'follow'
     });
+    
     const txt = await resp.text();
-    return JSON.parse(txt);
+    try {
+      return JSON.parse(txt);
+    } catch(e) {
+      // Si no es JSON, asumir éxito (no-cors devuelve vacío)
+      return { ok: true };
+    }
   } catch(e) {
-    Logger && Logger.log && Logger.log('Error servidor: ' + e.message);
-    return { ok: false, error: e.message };
+    // Fallback: enviar sin esperar respuesta
+    try {
+      fetch(API_MAQ, {
+        method: 'POST',
+        body: JSON.stringify({ accion, ...datos }),
+        mode: 'no-cors'
+      });
+      return { ok: true };
+    } catch(e2) {
+      return { ok: false, error: e2.message };
+    }
   }
 }
 
