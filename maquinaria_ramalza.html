@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Ramalza · Maquinaria</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--azul:#1a3a5c;--oro:#e8a020;--verde:#1D9E75;--rojo:#c0392b;--amarillo:#f39c12;--gris:#f5f7fa;--borde:#e2e6ea;--texto:#1a2332;--muted:#6b7a8d}
+html,body{min-height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--gris);color:var(--texto);font-size:15px}
+.topbar{background:var(--azul);color:#fff;position:sticky;top:0;z-index:100;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.topbar h1{font-size:16px;font-weight:600}
+.nav-tabs{display:flex;background:#fff;border-bottom:1px solid var(--borde);overflow-x:auto}
+.nav-tab{flex:1;min-width:80px;padding:11px 8px;border:none;background:transparent;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.nav-tab.active{color:var(--azul);border-bottom-color:var(--oro)}
+.view{display:none;padding:16px;max-width:600px;margin:0 auto;padding-bottom:40px}
+.view.active{display:block}
+.card{background:#fff;border:1px solid var(--borde);border-radius:12px;padding:16px;margin-bottom:14px}
+.card-title{font-size:12px;font-weight:700;color:var(--azul);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;padding:10px 13px;border:1.5px solid var(--borde);border-radius:8px;font-size:15px;font-family:inherit;color:var(--texto);background:#fff;outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--azul)}
+.field textarea{resize:none;line-height:1.5}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* Preoperacional checks */
+.check-group{margin-bottom:8px}
+.check-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid #f0f2f5}
+.check-row:last-child{border-bottom:none}
+.check-label{font-size:13px;color:var(--texto);line-height:1.4}
+.check-sub{font-size:11px;color:var(--muted)}
+.cnc-group{display:flex;gap:4px}
+.cnc-btn{width:36px;height:28px;border-radius:6px;border:1.5px solid var(--borde);background:#fff;font-size:10px;font-weight:700;cursor:pointer;color:var(--muted);transition:.15s}
+.cnc-btn.sel-c{background:#d4f1e6;border-color:#1D9E75;color:#0a6644}
+.cnc-btn.sel-nc{background:#fde8e8;border-color:var(--rojo);color:#922}
+.cnc-btn.sel-na{background:#eef2f7;border-color:#aab;color:#556}
+.section-head{font-size:11px;font-weight:700;color:#fff;background:var(--azul);padding:6px 12px;border-radius:6px;margin:10px 0 6px;letter-spacing:.04em;text-transform:uppercase}
+/* Máquina selector */
+.maq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:8px;margin-bottom:14px}
+.maq-btn{height:48px;border-radius:8px;border:1.5px solid var(--borde);background:#fff;font-size:14px;font-weight:600;cursor:pointer;color:var(--azul);transition:.15s}
+.maq-btn:hover{border-color:var(--azul);background:#f0f4f8}
+.maq-btn.sel{background:var(--azul);color:#fff;border-color:var(--azul)}
+.maq-btn.ok{border-color:var(--verde);background:#f0faf5;color:#0a6644}
+.maq-btn.warn{border-color:var(--amarillo);background:#fff9f0;color:#7d4e00}
+.maq-btn.err{border-color:var(--rojo);background:#fde8e8;color:#922}
+/* Botones */
+.btn{width:100%;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--azul);color:#fff}
+.btn-primary:disabled{background:#aaa}
+.btn-verde{background:var(--verde);color:#fff}
+.btn-outline{background:#fff;border:1.5px solid var(--borde);color:var(--texto);margin-top:10px}
+.btn-rojo{background:var(--rojo);color:#fff;margin-top:10px}
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stat{background:#fff;border:1px solid var(--borde);border-radius:10px;padding:12px 8px;text-align:center}
+.stat-val{font-size:22px;font-weight:700}
+.stat-label{font-size:10px;color:var(--muted);margin-top:2px}
+/* Historial */
+.hist-item{background:#fff;border:1px solid var(--borde);border-radius:10px;padding:12px;margin-bottom:8px}
+.hist-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.hist-tipo{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+.badge-preo{background:#dbeafe;color:#1e4f91}
+.badge-prev{background:#d4f1e6;color:#0a6644}
+.badge-corr{background:#fde8e8;color:#922}
+.hist-maq{font-size:13px;font-weight:600;color:var(--azul)}
+.hist-fecha{font-size:11px;color:var(--muted)}
+.hist-detail{font-size:12px;color:var(--texto);line-height:1.5}
+/* Cronograma */
+.cron-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid #f0f2f5}
+.cron-item:last-child{border-bottom:none}
+.cron-freq{width:80px;font-size:10px;font-weight:700;padding:3px 6px;border-radius:4px;text-align:center;flex-shrink:0}
+.freq-dia{background:#fff9c4;color:#7d4e00}
+.freq-sem{background:#bbdefb;color:#0d47a1}
+.freq-qui{background:#f8bbd9;color:#880e4f}
+.freq-bis{background:#c8e6c9;color:#1b5e20}
+.cron-text{font-size:12px;color:var(--texto);line-height:1.5}
+/* Alerta */
+.alerta{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start;line-height:1.5}
+.alerta-verde{background:#d4f1e6;border:1px solid #a5d6a7;color:#1b5e20}
+.alerta-oro{background:#fff9f0;border:1px solid #f0d080;color:#7d4e00}
+.alerta-rojo{background:#fde8e8;border:1px solid #f09595;color:#922}
+/* Firma */
+.firma-canvas{width:100%;height:120px;border:1.5px solid var(--borde);border-radius:8px;background:#fff;cursor:crosshair;touch-action:none}
+/* Spinner */
+.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.sep{height:1px;background:var(--borde);margin:12px 0}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>⚙ Ramalza · Maquinaria</h1>
+  <span id="fecha-top" style="font-size:11px;opacity:.7"></span>
+</div>
+
+<div class="nav-tabs">
+  <button class="nav-tab active" id="tab-panel" onclick="showTab('panel')">Panel</button>
+  <button class="nav-tab" id="tab-preo" onclick="showTab('preo')">Preoperacional</button>
+  <button class="nav-tab" id="tab-prev" onclick="showTab('prev')">Preventivo</button>
+  <button class="nav-tab" id="tab-corr" onclick="showTab('corr')">Correctivo</button>
+  <button class="nav-tab" id="tab-hist" onclick="showTab('hist')">Historial</button>
+  <button class="nav-tab" id="tab-cron" onclick="showTab('cron')">Cronograma</button>
+</div>
+
+<!-- PANEL PRINCIPAL -->
+<div id="view-panel" class="view active">
+  <div class="stats" id="stats-row"></div>
+
+  <!-- ALERTAS -->
+  <div id="panel-alertas"></div>
+
+  <div class="card">
+    <div class="card-title">Estado de máquinas hoy</div>
+    <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+      <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:var(--verde);display:inline-block"></span> Con preoperacional</span>
+      <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:var(--amarillo);display:inline-block"></span> Sin preoperacional hoy</span>
+      <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:var(--rojo);display:inline-block"></span> Con correctivo pendiente</span>
+    </div>
+    <div class="maq-grid" id="panel-maquinas"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Últimos registros</div>
+    <div id="ultimos-registros"></div>
+  </div>
+</div>
+
+<!-- PREOPERACIONAL -->
+<div id="view-preo" class="view">
+  <div class="card">
+    <div class="card-title">Selecciona la máquina</div>
+    <div class="maq-grid" id="sel-maq-preo"></div>
+    <div id="maq-sel-preo" style="display:none;background:#f0f4f8;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;color:var(--azul);margin-top:4px"></div>
+  </div>
+
+  <div id="form-preo" style="display:none">
+    <div class="card">
+      <div class="card-title">Información general</div>
+      <div class="row2">
+        <div class="field"><label>Fecha</label><input type="date" id="preo-fecha"></div>
+        <div class="field"><label>Operario</label><input type="text" id="preo-operario" placeholder="Nombre"></div>
+      </div>
+      <div class="field"><label>Obra / Locación</label><input type="text" id="preo-obra" placeholder="Nombre de la obra"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Estado general de la máquina</div>
+      <div class="section-head">Estado general</div>
+      <div id="checks-estado"></div>
+      <div class="section-head">Elementos de protección personal</div>
+      <div id="checks-epp"></div>
+      <div class="section-head">Área de trabajo</div>
+      <div id="checks-area"></div>
+      <div class="section-head">Condiciones personales</div>
+      <div id="checks-personal"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Observaciones y firma</div>
+      <div class="field"><label>Observaciones</label><textarea id="preo-obs" rows="2" placeholder="Observaciones..."></textarea></div>
+      <div class="field"><label>Firma del operario (dibuja con el dedo)</label>
+        <canvas id="firma-preo" class="firma-canvas"></canvas>
+        <button onclick="limpiarFirma('firma-preo')" style="margin-top:4px;padding:4px 10px;border:1px solid var(--borde);border-radius:5px;font-size:11px;background:#fff;cursor:pointer">Limpiar firma</button>
+      </div>
+    </div>
+
+    <div id="msg-preo"></div>
+    <button class="btn btn-verde" onclick="guardarPreoperacional()">✓ Guardar preoperacional</button>
+    <button class="btn btn-outline" onclick="resetSelMaq('preo')">← Cambiar máquina</button>
+  </div>
+</div>
+
+<!-- PREVENTIVO -->
+<div id="view-prev" class="view">
+  <div class="card">
+    <div class="card-title">Selecciona la máquina</div>
+    <div class="maq-grid" id="sel-maq-prev"></div>
+    <div id="maq-sel-prev" style="display:none;background:#f0f4f8;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;color:var(--azul);margin-top:4px"></div>
+  </div>
+
+  <div id="form-prev" style="display:none">
+    <div class="card">
+      <div class="card-title">Datos del mantenimiento</div>
+      <div class="row2">
+        <div class="field"><label>Fecha</label><input type="date" id="prev-fecha"></div>
+        <div class="field"><label>Lugar / Obra</label><input type="text" id="prev-obra" placeholder="Obra"></div>
+      </div>
+      <div class="field"><label>Causa / Tipo</label>
+        <select id="prev-causa">
+          <option value="mantenimiento programado">Mantenimiento programado</option>
+          <option value="revision preventiva">Revisión preventiva</option>
+          <option value="cambio de insumos">Cambio de insumos</option>
+        </select>
+      </div>
+      <div class="field"><label>Insumo utilizado</label><input type="text" id="prev-insumo" placeholder="Ej: taladrina, aceite..."></div>
+      <div class="field"><label>Componente revisado</label><input type="text" id="prev-componente" placeholder="Ej: tablero eléctrico, motobomba..."></div>
+      <div class="field"><label>Descripción del trabajo</label><textarea id="prev-desc" rows="3" placeholder="Describe el mantenimiento realizado..."></textarea></div>
+      <div class="row2">
+        <div class="field"><label>Recibe</label><input type="text" id="prev-recibe" placeholder="Nombre"></div>
+        <div class="field"><label>Fecha de entrega</label><input type="date" id="prev-entrega"></div>
+      </div>
+      <div class="field"><label>Firma operario (dibuja con el dedo)</label>
+        <canvas id="firma-prev" class="firma-canvas"></canvas>
+        <button onclick="limpiarFirma('firma-prev')" style="margin-top:4px;padding:4px 10px;border:1px solid var(--borde);border-radius:5px;font-size:11px;background:#fff;cursor:pointer">Limpiar firma</button>
+      </div>
+    </div>
+    <div id="msg-prev"></div>
+    <button class="btn btn-verde" onclick="guardarPreventivo()">✓ Guardar mantenimiento preventivo</button>
+    <button class="btn btn-outline" onclick="resetSelMaq('prev')">← Cambiar máquina</button>
+  </div>
+</div>
+
+<!-- CORRECTIVO -->
+<div id="view-corr" class="view">
+  <div class="card">
+    <div class="card-title">Selecciona la máquina</div>
+    <div class="maq-grid" id="sel-maq-corr"></div>
+    <div id="maq-sel-corr" style="display:none;background:#fde8e8;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;color:#922;margin-top:4px"></div>
+  </div>
+
+  <div id="form-corr" style="display:none">
+    <div class="card">
+      <div class="card-title">Datos del correctivo</div>
+      <div class="row2">
+        <div class="field"><label>Fecha</label><input type="date" id="corr-fecha"></div>
+        <div class="field"><label>Locación / Obra</label><input type="text" id="corr-obra" placeholder="Obra"></div>
+      </div>
+      <div class="field"><label>Insumo utilizado</label><input type="text" id="corr-insumo" placeholder="Repuesto o insumo utilizado"></div>
+      <div class="field"><label>Componente afectado</label><input type="text" id="corr-componente" placeholder="Ej: tablero eléctrico, cuchillas..."></div>
+      <div class="field"><label>Descripción de la falla y solución</label><textarea id="corr-desc" rows="4" placeholder="Describe qué falló y cómo se solucionó..."></textarea></div>
+      <div class="row2">
+        <div class="field"><label>Número serial</label><input type="text" id="corr-serial" placeholder="Serial de la máquina"></div>
+        <div class="field"><label>Fecha de entrega</label><input type="date" id="corr-entrega"></div>
+      </div>
+      <div class="field"><label>Recibe</label><input type="text" id="corr-recibe" placeholder="Nombre de quien recibe"></div>
+      <div class="field"><label>Firma operario (dibuja con el dedo)</label>
+        <canvas id="firma-corr" class="firma-canvas"></canvas>
+        <button onclick="limpiarFirma('firma-corr')" style="margin-top:4px;padding:4px 10px;border:1px solid var(--borde);border-radius:5px;font-size:11px;background:#fff;cursor:pointer">Limpiar firma</button>
+      </div>
+    </div>
+    <div id="msg-corr"></div>
+    <button class="btn btn-rojo" onclick="guardarCorrectivo()">⚠ Guardar mantenimiento correctivo</button>
+    <button class="btn btn-outline" onclick="resetSelMaq('corr')">← Cambiar máquina</button>
+  </div>
+</div>
+
+<!-- HISTORIAL -->
+<div id="view-hist" class="view">
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <select id="hist-maq-fil" onchange="renderHistorial()" style="padding:8px 10px;border:1.5px solid var(--borde);border-radius:8px;font-size:13px;flex:1">
+        <option value="">Todas las máquinas</option>
+      </select>
+      <select id="hist-tipo-fil" onchange="renderHistorial()" style="padding:8px 10px;border:1.5px solid var(--borde);border-radius:8px;font-size:13px;flex:1">
+        <option value="">Todos los tipos</option>
+        <option value="preoperacional">Preoperacional</option>
+        <option value="preventivo">Preventivo</option>
+        <option value="correctivo">Correctivo</option>
+      </select>
+    </div>
+  </div>
+  <div id="lista-historial"></div>
+</div>
+
+<!-- CRONOGRAMA -->
+<div id="view-cron" class="view">
+  <div class="card">
+    <div class="card-title">Cronograma de mantenimiento — todas las máquinas</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Actividades según frecuencia. Igual para las 38 máquinas.</p>
+    <div id="lista-cronograma"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Registrar cumplimiento del cronograma</div>
+    <div class="field"><label>Máquina</label>
+      <select id="cron-maq">
+        <option value="">— Seleccionar —</option>
+      </select>
+    </div>
+    <div class="field"><label>Fecha</label><input type="date" id="cron-fecha"></div>
+    <div class="field"><label>Actividad realizada</label>
+      <select id="cron-actividad">
+        <option value="Limpieza tanque y tamiz de taladrina">Limpieza tanque y tamiz de taladrina</option>
+        <option value="Calibrar tolerancia de ajuste de roscado">Calibrar tolerancia de ajuste de roscado</option>
+        <option value="Limpieza general: lavado y ACPM">Limpieza general: lavado y ACPM</option>
+        <option value="Revisión del tablero eléctrico">Revisión del tablero eléctrico</option>
+        <option value="Revisión partes mecánicas generales">Revisión partes mecánicas generales</option>
+        <option value="Ajuste del tornillo posterior">Ajuste del tornillo posterior</option>
+        <option value="Revisión de micro switches de carrera">Revisión de micro switches de carrera</option>
+        <option value="Revisión botón de encendido y parada de emergencia">Revisión botón de encendido y parada de emergencia</option>
+        <option value="Conexión eléctrica, cables en buen estado">Conexión eléctrica, cables en buen estado</option>
+        <option value="Limpieza collarín y revisión retenedores">Limpieza collarín y revisión retenedores</option>
+        <option value="Revisión de la motobomba">Revisión de la motobomba</option>
+        <option value="Revisión de partes generales (ruedas, cuchillas, tornillería)">Revisión de partes generales</option>
+        <option value="Revisión valvulina para transmisión colineal">Revisión valvulina transmisión colineal</option>
+      </select>
+    </div>
+    <div class="field"><label>Técnico mecánico</label><input type="text" id="cron-tecnico" placeholder="Nombre del técnico"></div>
+    <div class="field"><label>Observaciones</label><textarea id="cron-obs" rows="2" placeholder="Observaciones..."></textarea></div>
+    <button class="btn btn-primary" onclick="guardarCronograma()" style="margin-top:4px">Registrar actividad</button>
+  </div>
+</div>
+
+<script>
+const API_MAQ = 'https://script.google.com/macros/s/AKfycbxsWdpNfD7f4uEAiYQp9SZshCtAEqe6Nmr3C7XmTP7pbJuqMjct8rtFyp5W-tg6HF6Rrw/exec';
+const HOY = new Date().toISOString().slice(0,10);
+let maqSeleccionada = { preo: null, prev: null, corr: null };
+let registros = JSON.parse(localStorage.getItem('ramalza_maq') || '[]');
+let firmando = {};
+
+// ── Checks preoperacional ──────────────────────────────────────
+const CHECKS = {
+  estado: [
+    {id:'aceite', label:'Aceite soluble o taladrina', sub:'Verificar nivel requerido'},
+    {id:'cuchillas', label:'Estado de cuchillas', sub:'No presenten desgaste'},
+    {id:'tablero', label:'Tablero eléctrico', sub:'Verificar estado de componentes'},
+    {id:'boton_enc', label:'Botón encendido y apagado', sub:'Prende y apaga adecuadamente'},
+    {id:'conexion', label:'Conexión eléctrica', sub:'Cable en buen estado'},
+    {id:'superficial', label:'Estado superficial', sub:'Verificar estructura y limpieza'},
+    {id:'boton_seg', label:'Botón de seguridad', sub:'Verificar funcionamiento'},
+  ],
+  epp: [
+    {id:'visual', label:'Protección visual', sub:'Gafas, careta u otros'},
+    {id:'auditiva', label:'Protección auditiva', sub:'De copa o de inserción'},
+    {id:'guantes', label:'Guantes de seguridad', sub:'Carnaza, anticorte u otros'},
+    {id:'botas', label:'Botas de seguridad', sub:'Punta de acero, dieléctricas'},
+    {id:'respiratoria', label:'Protección respiratoria', sub:'Tapabocas, mascarilla u otros'},
+  ],
+  area: [
+    {id:'limpia', label:'Área limpia, seca y ventilada', sub:''},
+    {id:'senalada', label:'Señalizada y demarcada', sub:''},
+    {id:'combustible', label:'Libre de material combustible', sub:''},
+    {id:'iluminacion', label:'Buena iluminación', sub:'Natural o artificial'},
+    {id:'emergencias', label:'Equipos de emergencia ubicados', sub:'Botiquín, extintor, salidas'},
+  ],
+  personal: [
+    {id:'capacitado', label:'Personal capacitado para operar', sub:''},
+    {id:'procedimiento', label:'Conoce el procedimiento de roscado', sub:''},
+    {id:'psicoactivas', label:'Libre de sustancias psicoactivas', sub:''},
+    {id:'alcohol', label:'Libre de efectos alcohólicos', sub:''},
+    {id:'salud', label:'En condiciones de salud adecuadas', sub:''},
+  ]
+};
+
+const CRONOGRAMA = [
+  {freq:'Todos los días', clase:'freq-dia', items:['Limpieza tanque y tamiz de taladrina','Estado de cuchillas — no presenten desgaste','Botón de encendido y parada de emergencia','Revisión botón de seguridad','Estado superficial — limpieza general']},
+  {freq:'Dos veces por semana', clase:'freq-bis', items:['Calibrar tolerancia de ajuste de roscado','Revisión partes mecánicas generales (6.2.4)']},
+  {freq:'Una vez a la semana', clase:'freq-sem', items:['Limpieza general: lavado y ACPM','Revisión del tablero eléctrico','Ajuste del tornillo posterior','Conexión eléctrica — cables en buen estado','Revisión de la motobomba','Revisión valvulina para transmisión colineal']},
+  {freq:'Cada quince días', clase:'freq-qui', items:['Revisión de micro switches de carrera','Limpieza collarín y revisión retenedores','Revisión de partes generales: ruedas, cuchillas, tornillería']},
+];
+
+// ── Init ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('fecha-top').textContent = new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'});
+  ['preo-fecha','prev-fecha','corr-fecha','cron-fecha','prev-entrega','corr-entrega'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = HOY;
+  });
+  renderMaquinas();
+  renderChecks();
+  renderCronograma();
+  renderHistorial();
+  renderStats();
+  renderUltimos();
+  poblarSelects();
+  initFirmas();
+});
+
+function poblarSelects() {
+  ['hist-maq-fil','cron-maq'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    for (let i = 1; i <= 38; i++) {
+      const opt = document.createElement('option');
+      opt.value = i; opt.textContent = 'Máquina #' + i;
+      sel.appendChild(opt);
+    }
+  });
+}
+
+// ── Selector de máquinas ──────────────────────────────────────
+function renderMaquinas() {
+  ['preo','prev','corr'].forEach(tipo => {
+    const el = document.getElementById('sel-maq-' + tipo);
+    if (!el) return;
+    el.innerHTML = '';
+    for (let i = 1; i <= 38; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'maq-btn';
+      btn.textContent = '#' + i;
+      btn.onclick = () => seleccionarMaquina(tipo, i);
+      el.appendChild(btn);
+    }
+  });
+
+  // Panel con estado
+  const panel = document.getElementById('panel-maquinas');
+  if (!panel) return;
+  panel.innerHTML = '';
+  for (let i = 1; i <= 38; i++) {
+    const btn = document.createElement('button');
+    const tienePreo = registros.some(r => r.tipo === 'preoperacional' && r.maquina === i && r.fecha === HOY);
+    const tieneCorr = registros.some(r => r.tipo === 'correctivo' && r.maquina === i && !r.resuelto);
+    btn.className = 'maq-btn ' + (tieneCorr ? 'err' : tienePreo ? 'ok' : 'warn');
+    btn.textContent = '#' + i;
+    btn.onclick = () => { showTab('hist'); setTimeout(() => { document.getElementById('hist-maq-fil').value = i; renderHistorial(); }, 100); };
+    panel.appendChild(btn);
+  }
+}
+
+function seleccionarMaquina(tipo, num) {
+  maqSeleccionada[tipo] = num;
+  document.querySelectorAll('#sel-maq-' + tipo + ' .maq-btn').forEach((b, i) => {
+    b.classList.toggle('sel', i + 1 === num);
+  });
+  const label = document.getElementById('maq-sel-' + tipo);
+  label.style.display = 'block';
+  label.textContent = '✓ Máquina #' + num + ' seleccionada';
+  document.getElementById('form-' + tipo).style.display = 'block';
+}
+
+function resetSelMaq(tipo) {
+  maqSeleccionada[tipo] = null;
+  document.querySelectorAll('#sel-maq-' + tipo + ' .maq-btn').forEach(b => b.classList.remove('sel'));
+  document.getElementById('maq-sel-' + tipo).style.display = 'none';
+  document.getElementById('form-' + tipo).style.display = 'none';
+}
+
+// ── Checks ────────────────────────────────────────────────────
+function renderChecks() {
+  Object.entries(CHECKS).forEach(([grupo, items]) => {
+    const el = document.getElementById('checks-' + grupo);
+    if (!el) return;
+    el.innerHTML = items.map(item => `
+      <div class="check-row">
+        <div><div class="check-label">${item.label}</div>${item.sub ? '<div class="check-sub">'+item.sub+'</div>' : ''}</div>
+        <div class="cnc-group">
+          <button class="cnc-btn" data-id="${item.id}" data-val="C" onclick="setCheck(this)">C</button>
+          <button class="cnc-btn" data-id="${item.id}" data-val="NC" onclick="setCheck(this)">NC</button>
+          <button class="cnc-btn" data-id="${item.id}" data-val="NA" onclick="setCheck(this)">NA</button>
+        </div>
+      </div>`).join('');
+  });
+}
+
+function setCheck(btn) {
+  const id = btn.dataset.id;
+  const val = btn.dataset.val;
+  document.querySelectorAll(`[data-id="${id}"]`).forEach(b => {
+    b.className = 'cnc-btn';
+    if (b.dataset.val === val) {
+      b.classList.add(val === 'C' ? 'sel-c' : val === 'NC' ? 'sel-nc' : 'sel-na');
+    }
+  });
+}
+
+function getChecks() {
+  const result = {};
+  document.querySelectorAll('.cnc-btn').forEach(btn => {
+    if (btn.classList.contains('sel-c') || btn.classList.contains('sel-nc') || btn.classList.contains('sel-na')) {
+      result[btn.dataset.id] = btn.dataset.val;
+    }
+  });
+  return result;
+}
+
+// ── Firmas ────────────────────────────────────────────────────
+function initFirmas() {
+  ['firma-preo','firma-prev','firma-corr'].forEach(id => {
+    const canvas = document.getElementById(id);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth;
+    canvas.height = 120;
+    ctx.strokeStyle = '#1a3a5c';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    firmando[id] = false;
+
+    const getPos = e => {
+      const r = canvas.getBoundingClientRect();
+      const src = e.touches ? e.touches[0] : e;
+      return { x: src.clientX - r.left, y: src.clientY - r.top };
+    };
+    canvas.addEventListener('mousedown', e => { firmando[id] = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); });
+    canvas.addEventListener('mousemove', e => { if (!firmando[id]) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
+    canvas.addEventListener('mouseup', () => firmando[id] = false);
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); firmando[id] = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); });
+    canvas.addEventListener('touchmove', e => { e.preventDefault(); if (!firmando[id]) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
+    canvas.addEventListener('touchend', () => firmando[id] = false);
+  });
+}
+
+function limpiarFirma(id) {
+  const canvas = document.getElementById(id);
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function getFirma(id) {
+  return document.getElementById(id).toDataURL();
+}
+
+// ── Guardar registros ─────────────────────────────────────────
+function guardarPreoperacional() {
+  if (!maqSeleccionada.preo) { mostrarMsg('msg-preo', 'Selecciona una máquina.', 'oro'); return; }
+  const operario = document.getElementById('preo-operario').value.trim();
+  if (!operario) { mostrarMsg('msg-preo', 'Ingresa el nombre del operario.', 'oro'); return; }
+
+  const reg = {
+    id: Date.now(),
+    tipo: 'preoperacional',
+    maquina: maqSeleccionada.preo,
+    fecha: document.getElementById('preo-fecha').value,
+    operario,
+    obra: document.getElementById('preo-obra').value,
+    checks: getChecks(),
+    observaciones: document.getElementById('preo-obs').value,
+    firma: getFirma('firma-preo'),
+    timestamp: new Date().toISOString()
+  };
+
+  registros.unshift(reg);
+  guardarLocal();
+  mostrarMsg('msg-preo', '✓ Guardando en servidor...', 'verde');
+  renderStats(); renderMaquinas(); renderUltimos();
+  
+  enviarAlServidor('guardar_preo', reg).then(r => {
+    if (r && r.ok) {
+      mostrarMsg('msg-preo', '✓ Preoperacional guardado en Google Sheets — Máquina #' + maqSeleccionada.preo, 'verde');
+    } else {
+      mostrarMsg('msg-preo', '✓ Guardado localmente. ' + (r?.error || 'Sin conexión al servidor'), 'verde');
+    }
+  });
+  setTimeout(() => resetSelMaq('preo'), 3000);
+}
+
+function guardarPreventivo() {
+  if (!maqSeleccionada.prev) { mostrarMsg('msg-prev', 'Selecciona una máquina.', 'oro'); return; }
+  const desc = document.getElementById('prev-desc').value.trim();
+  if (!desc) { mostrarMsg('msg-prev', 'Describe el mantenimiento.', 'oro'); return; }
+
+  const reg = {
+    id: Date.now(),
+    tipo: 'preventivo',
+    maquina: maqSeleccionada.prev,
+    fecha: document.getElementById('prev-fecha').value,
+    obra: document.getElementById('prev-obra').value,
+    causa: document.getElementById('prev-causa').value,
+    insumo: document.getElementById('prev-insumo').value,
+    componente: document.getElementById('prev-componente').value,
+    descripcion: desc,
+    recibe: document.getElementById('prev-recibe').value,
+    fechaEntrega: document.getElementById('prev-entrega').value,
+    firma: getFirma('firma-prev'),
+    timestamp: new Date().toISOString()
+  };
+
+  registros.unshift(reg);
+  guardarLocal();
+  mostrarMsg('msg-prev', '✓ Guardando en servidor...', 'verde');
+  renderStats(); renderUltimos();
+  
+  enviarAlServidor('guardar_preventivo', reg).then(r => {
+    if (r && r.ok) {
+      mostrarMsg('msg-prev', '✓ Preventivo guardado en Google Sheets — Máquina #' + maqSeleccionada.prev, 'verde');
+    } else {
+      mostrarMsg('msg-prev', '✓ Guardado localmente. ' + (r?.error || 'Sin conexión'), 'verde');
+    }
+  });
+  setTimeout(() => resetSelMaq('prev'), 3000);
+}
+
+function guardarCorrectivo() {
+  if (!maqSeleccionada.corr) { mostrarMsg('msg-corr', 'Selecciona una máquina.', 'oro'); return; }
+  const desc = document.getElementById('corr-desc').value.trim();
+  if (!desc) { mostrarMsg('msg-corr', 'Describe la falla y solución.', 'rojo'); return; }
+
+  const reg = {
+    id: Date.now(),
+    tipo: 'correctivo',
+    maquina: maqSeleccionada.corr,
+    fecha: document.getElementById('corr-fecha').value,
+    obra: document.getElementById('corr-obra').value,
+    insumo: document.getElementById('corr-insumo').value,
+    componente: document.getElementById('corr-componente').value,
+    descripcion: desc,
+    serial: document.getElementById('corr-serial').value,
+    recibe: document.getElementById('corr-recibe').value,
+    fechaEntrega: document.getElementById('corr-entrega').value,
+    firma: getFirma('firma-corr'),
+    resuelto: false,
+    timestamp: new Date().toISOString()
+  };
+
+  registros.unshift(reg);
+  guardarLocal();
+  mostrarMsg('msg-corr', '⚠ Guardando en servidor...', 'rojo');
+  renderStats(); renderMaquinas(); renderUltimos();
+  
+  enviarAlServidor('guardar_correctivo', reg).then(r => {
+    if (r && r.ok) {
+      mostrarMsg('msg-corr', '⚠ Correctivo guardado en Google Sheets — se envió alerta por correo', 'rojo');
+    } else {
+      mostrarMsg('msg-corr', '⚠ Guardado localmente. ' + (r?.error || 'Sin conexión'), 'rojo');
+    }
+  });
+  setTimeout(() => resetSelMaq('corr'), 3000);
+}
+
+function guardarCronograma() {
+  const maq = document.getElementById('cron-maq').value;
+  const act = document.getElementById('cron-actividad').value;
+  if (!maq) { alert('Selecciona una máquina'); return; }
+
+  const reg = {
+    id: Date.now(),
+    tipo: 'cronograma',
+    maquina: parseInt(maq),
+    fecha: document.getElementById('cron-fecha').value,
+    actividad: act,
+    tecnico: document.getElementById('cron-tecnico').value,
+    observaciones: document.getElementById('cron-obs').value,
+    timestamp: new Date().toISOString()
+  };
+
+  registros.unshift(reg);
+  guardarLocal();
+  document.getElementById('cron-tecnico').value = '';
+  document.getElementById('cron-obs').value = '';
+  
+  enviarAlServidor('guardar_cronograma', reg).then(r => {
+    if (r && r.ok) {
+      alert('✓ Actividad registrada en Google Sheets');
+    } else {
+      alert('✓ Actividad guardada localmente. ' + (r?.error || 'Sin conexión'));
+    }
+  });
+}
+
+function guardarLocal() {
+  localStorage.setItem('ramalza_maq', JSON.stringify(registros.slice(0, 500)));
+}
+
+async function enviarAlServidor(accion, datos) {
+  try {
+    const resp = await fetch(API_MAQ, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ accion, ...datos }),
+      redirect: 'follow'
+    });
+    const txt = await resp.text();
+    return JSON.parse(txt);
+  } catch(e) {
+    Logger && Logger.log && Logger.log('Error servidor: ' + e.message);
+    return { ok: false, error: e.message };
+  }
+}
+
+// ── Alertas ───────────────────────────────────────────────────
+function renderAlertas() {
+  const el = document.getElementById('panel-alertas');
+  if (!el) return;
+  const alertas = [];
+
+  // 1. Máquinas sin preoperacional hoy (solo días hábiles lun-sab)
+  const diaSemana = new Date().getDay(); // 0=dom
+  if (diaSemana !== 0) { // si no es domingo
+    const conPreo = new Set(registros.filter(r => r.tipo === 'preoperacional' && r.fecha === HOY).map(r => r.maquina));
+    // Detectar máquinas activas (que han tenido registro en los últimos 30 días)
+    const hace30 = new Date(); hace30.setDate(hace30.getDate() - 30);
+    const maqActivas = new Set(registros.filter(r => new Date(r.timestamp) > hace30).map(r => r.maquina));
+    const sinPreo = [...maqActivas].filter(m => !conPreo.has(m)).sort((a,b) => a-b);
+    if (sinPreo.length > 0) {
+      alertas.push({
+        tipo: 'rojo',
+        titulo: '🔴 Sin preoperacional hoy',
+        texto: sinPreo.length + ' máquina(s) activa(s) sin preoperacional: ' + sinPreo.map(m => '#'+m).join(', ')
+      });
+    }
+  }
+
+  // 2. Correctivos sin resolver
+  const correctivos = registros.filter(r => r.tipo === 'correctivo' && !r.resuelto);
+  if (correctivos.length > 0) {
+    const maqsCorr = [...new Set(correctivos.map(r => r.maquina))].sort((a,b)=>a-b);
+    alertas.push({
+      tipo: 'rojo',
+      titulo: '⚠ Correctivos pendientes de resolver',
+      texto: maqsCorr.length + ' máquina(s) con correctivo activo: ' + maqsCorr.map(m => '#'+m).join(', ')
+    });
+  }
+
+  // 3. Mantenimiento preventivo vencido (más de 7 días sin preventivo)
+  const hace7 = new Date(); hace7.setDate(hace7.getDate() - 7);
+  const hace30b = new Date(); hace30b.setDate(hace30b.getDate() - 30);
+  const maqActivas2 = new Set(registros.filter(r => new Date(r.timestamp) > hace30b).map(r => r.maquina));
+  const sinPrev7 = [];
+  maqActivas2.forEach(m => {
+    const ultimo = registros.filter(r => (r.tipo === 'preventivo' || r.tipo === 'cronograma') && r.maquina === m)
+                            .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+    if (!ultimo || new Date(ultimo.timestamp) < hace7) sinPrev7.push(m);
+  });
+  if (sinPrev7.length > 0) {
+    alertas.push({
+      tipo: 'oro',
+      titulo: '🟡 Mantenimiento preventivo pendiente',
+      texto: sinPrev7.sort((a,b)=>a-b).map(m=>'#'+m).join(', ') + ' — más de 7 días sin preventivo registrado'
+    });
+  }
+
+  // 4. Felicitación si todo está bien
+  if (alertas.length === 0) {
+    alertas.push({ tipo: 'verde', titulo: '✓ Todo al día', texto: 'No hay alertas pendientes. Todas las máquinas activas tienen preoperacional hoy.' });
+  }
+
+  el.innerHTML = alertas.map(a => `
+    <div class="alerta alerta-${a.tipo}" style="margin-bottom:8px">
+      <div><strong>${a.titulo}</strong><br>${a.texto}</div>
+    </div>`).join('');
+}
+
+// ── Stats ─────────────────────────────────────────────────────
+function renderStats() {
+  const preoHoy = new Set(registros.filter(r => r.tipo === 'preoperacional' && r.fecha === HOY).map(r => r.maquina)).size;
+  const sinPreo = 38 - preoHoy;
+  const correctivos = registros.filter(r => r.tipo === 'correctivo' && !r.resuelto).length;
+  const totalReg = registros.length;
+
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat"><div class="stat-val" style="color:var(--verde)">${preoHoy}</div><div class="stat-label">Con preop. hoy</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--amarillo)">${sinPreo}</div><div class="stat-label">Sin preop. hoy</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--rojo)">${correctivos}</div><div class="stat-label">Correctivos activos</div></div>
+    <div class="stat"><div class="stat-val" style="color:var(--azul)">${totalReg}</div><div class="stat-label">Total registros</div></div>
+  `;
+}
+
+// ── Últimos registros ─────────────────────────────────────────
+function renderUltimos() {
+  const el = document.getElementById('ultimos-registros');
+  const ultimos = registros.slice(0, 5);
+  if (!ultimos.length) { el.innerHTML = '<p style="font-size:13px;color:var(--muted);text-align:center;padding:10px">No hay registros aún.</p>'; return; }
+  el.innerHTML = ultimos.map(r => itemHistorial(r)).join('');
+}
+
+// ── Historial ─────────────────────────────────────────────────
+function renderHistorial() {
+  const maqFil = document.getElementById('hist-maq-fil').value;
+  const tipoFil = document.getElementById('hist-tipo-fil').value;
+  let lista = registros;
+  if (maqFil) lista = lista.filter(r => r.maquina == maqFil);
+  if (tipoFil) lista = lista.filter(r => r.tipo === tipoFil);
+  const el = document.getElementById('lista-historial');
+  if (!lista.length) { el.innerHTML = '<div class="alerta alerta-oro">No hay registros con ese filtro.</div>'; return; }
+  el.innerHTML = lista.map(r => itemHistorial(r)).join('');
+}
+
+function itemHistorial(r) {
+  const tipos = { preoperacional: 'Preoperacional', preventivo: 'Preventivo', correctivo: 'Correctivo', cronograma: 'Cronograma' };
+  const clases = { preoperacional: 'badge-preo', preventivo: 'badge-prev', correctivo: 'badge-corr', cronograma: 'badge-prev' };
+  const detalle = r.tipo === 'preoperacional'
+    ? `Operario: ${r.operario || '—'} · Obra: ${r.obra || '—'}`
+    : r.tipo === 'correctivo'
+    ? `Componente: ${r.componente || '—'} · ${r.descripcion ? r.descripcion.slice(0,60)+'...' : ''}`
+    : r.tipo === 'cronograma'
+    ? `${r.actividad} · Técnico: ${r.tecnico || '—'}`
+    : `${r.causa || ''} · ${r.descripcion ? r.descripcion.slice(0,60)+'...' : ''}`;
+  const btnResuelto = r.tipo === 'correctivo' && !r.resuelto
+    ? `<button onclick="marcarResuelto(${r.id})" style="margin-top:6px;padding:4px 10px;background:#d4f1e6;border:1px solid #1D9E75;border-radius:6px;font-size:11px;font-weight:600;color:#0a6644;cursor:pointer">✓ Marcar como resuelto</button>`
+    : r.tipo === 'correctivo' && r.resuelto
+    ? `<span style="font-size:11px;color:#0a6644;font-weight:600">✓ Resuelto</span>`
+    : '';
+  return `<div class="hist-item">
+    <div class="hist-head">
+      <span class="hist-tipo ${clases[r.tipo]}">${tipos[r.tipo]}</span>
+      <span class="hist-fecha">${r.fecha}</span>
+    </div>
+    <div class="hist-maq">Máquina #${r.maquina}</div>
+    <div class="hist-detail">${detalle}</div>
+    ${btnResuelto}
+  </div>`;
+}
+
+function marcarResuelto(id) {
+  const reg = registros.find(r => r.id === id);
+  if (reg) {
+    reg.resuelto = true;
+    guardarLocal();
+    enviarAlServidor('resolver_correctivo', { id: reg.id, maquina: reg.maquina });
+    renderHistorial(); renderStats(); renderAlertas(); renderMaquinas();
+  }
+}
+
+function marcarInactiva(num) {
+  const motivo = prompt('Motivo de inactividad (ej: sin obra asignada, en mantenimiento mayor, en bodega):');
+  if (!motivo) return;
+  enviarAlServidor('marcar_inactiva', {
+    maquina: num,
+    fechaInicio: HOY,
+    motivo,
+    estadoMaquina: 'BUEN ESTADO',
+    responsable: 'Yilver Diaz'
+  }).then(r => {
+    if (r && r.ok) {
+      alert('✓ Máquina #' + num + ' marcada como inactiva');
+      renderMaquinas(); renderStats(); renderAlertas();
+    }
+  });
+}
+
+function marcarActiva(num) {
+  if (!confirm('¿Activar Máquina #' + num + '?')) return;
+  enviarAlServidor('marcar_activa', { maquina: num }).then(r => {
+    if (r && r.ok) {
+      alert('✓ Máquina #' + num + ' marcada como activa');
+      renderMaquinas(); renderStats(); renderAlertas();
+    }
+  });
+}
+
+// ── Cronograma ────────────────────────────────────────────────
+function renderCronograma() {
+  const el = document.getElementById('lista-cronograma');
+  el.innerHTML = CRONOGRAMA.map(grupo => `
+    <div style="margin-bottom:12px">
+      <span class="cron-freq ${grupo.clase}">${grupo.freq}</span>
+      ${grupo.items.map(item => `
+        <div class="cron-item">
+          <div class="cron-text">${item}</div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+// ── Navegación ────────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+  window.scrollTo(0, 0);
+  if (id === 'hist') renderHistorial();
+  if (id === 'panel') { renderStats(); renderAlertas(); renderMaquinas(); renderUltimos(); }
+}
+
+// ── Utilidades ────────────────────────────────────────────────
+function mostrarMsg(id, txt, tipo) {
+  const clases = { verde: 'alerta-verde', oro: 'alerta-oro', rojo: 'alerta-rojo' };
+  document.getElementById(id).innerHTML = `<div class="alerta ${clases[tipo]}">${txt}</div>`;
+  setTimeout(() => { const el = document.getElementById(id); if(el) el.innerHTML = ''; }, 3000);
+}
+</script>
+</body>
+</html>
